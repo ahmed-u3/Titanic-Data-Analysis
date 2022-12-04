@@ -1,18 +1,41 @@
----
-title: "R Notebook"
-output: html_notebook
----
-
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
-
+To read file and assign variable
 ```{r}
-plot(cars)
+library(readr)
+titanic <- read_csv(file = "train.csv")
+nrow(titanic)
+```
+Q1) Summarize the population
+```{r}
+titanic%>%
+summarise(mu=mean(PassengerId),pop_med=median(PassengerId), 
+sigma = sd(PassengerId), 
+pop_iqr = IQR(PassengerId),
+pop_min=min(PassengerId),
+pop_max=max(PassengerId),
+pop_q1=quantile(PassengerId,0.25),
+pop_q3=quantile(PassengerId,0.75))
+```
+Q2) The difference between quantitative and qualitative that: 
+Quantitative is expressed in numbers and graph, It used to test,or confirm, theories ad assumptions.
+While Qualitative is expressed in words , It used to understand concepts ,or thoughts.
+Quantitative: 1.PassengerId 2.Survived 3.Pclass 4.Age 5.SibSp 6.Parch 7.Fare
+Qualitative: 1.Name 2.Sex 3.Ticket 4.Cabin 5.Embarked
+
+Q3)i)
+```{r}
+#To count missing variables of Age
+sum(is.na(titanic$Age))
+```
+ii) 
+iii) 
+iv)
+Q4)Remove missing data
+```{r}
+titanic=na.omit(titanic)
+nrow(titanic)
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
-
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
-
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+Q5)Draw histogram for dataset's Age
+```{r}
+hist(titanic$Age , xlab = "Age")
+```
