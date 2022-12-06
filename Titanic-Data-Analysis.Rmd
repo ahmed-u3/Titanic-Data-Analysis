@@ -72,6 +72,16 @@ Checking for Missing values in each feature
 colSums(is.na(train))
 ```
 ## Categories of Features
+### Qualitive 
+Categorical: Survived, Sex, and Embarked.
+Ordinal: Pclass.
+Nominal: Name.
+### Quantitive
+Continous: Age, Fare.
+Discrete: SibSp, Parch.
+### Mix types
+Ticket is a mix of numeric and alphanumeric data types
+Cabin is mix between alpha and numeric
 ## Plotting The Data
 
 ### Correlation Matrix
