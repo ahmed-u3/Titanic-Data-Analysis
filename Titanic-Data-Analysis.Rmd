@@ -50,6 +50,8 @@ library(hrbrthemes)
 library(e1071)
 library(mice)
 library(statsr)
+library(plotly)
+
 
 
 # Loading Data
@@ -244,4 +246,128 @@ the p-norm is  $||x||_p := (\sum_{i=1} |x|^p)^{\frac{1}{p}}$
 
 standard euclidean distance is good choice because it invariant under rotation 
 as large data choice of k and p isn’t important so 
+### Questions
+Q3)
+i) 
+```{r}
+sum(is.na(titanic$Age))
+```
+ii)??
+iii) Yes, by interval estimation
+iv)??
+Q4)
+```{r}
+titanic=na.omit(titanic)
+```
+Q5)
+```{r}
+gAgeDensity <- train %>%
+  select(Age) %>%
+  ggplot(aes(Age, y = ..density..)) +
+  geom_histogram(bins = 20,binwidth = 1,color=inferno(1,alpha=1)) + 
+  geom_density(fill=inferno(1,begin = 0.5,alpha = 0.5),color = inferno(1,begin=0)) + 
+  annotate(
+    "text",
+    x = 70,
+    y = 0.04,
+    label = paste("Skewness:",skewness(train$Age,na.rm = T)),
+    colour = inferno(1,begin = 0.1),
+    size = 4
+  ) + 
+  theme_ipsum_rc()
 
+gAgeDensity
+```
+Q6)//?
+```{r}
+gFareDensity <- train %>%
+  select(Fare) %>%
+  ggplot(aes(Fare, y = ..density..)) +
+  geom_histogram(bins = 20,binwidth = 1,color=viridis(1,alpha=1)) + 
+  geom_density(fill=inferno(1,begin = 0.5,alpha = 0.5),color = viridis(1,begin=0)) + 
+  scale_y_continuous(limits = c(0,0.05))+
+  theme_ipsum_rc() + 
+  annotate(
+    "text",
+    x = 200,
+    y = 0.05,
+    label = paste("Skewness",skewness(train$Fare)),
+    colour = "black",
+    size = 4
+  )
+
+gFareDensity 
+```
+Q7)
+```{r}
+mean(titanic$Age, na.rm = T)
+sd(titanic$Age,na.rm =T)
+```
+Q8)
+Q)9,10,11
+```{r}
+numOfSamples <- c(50,100,1000)
+smplngDstrbtonRpsChng <- tibble()
+for(i in numOfSamples){
+  for(y in 1:i){
+    nsample <- sample_n(train,size=50,replace=T) %>%
+      select(Age)
+    newRow <- nrow(smplngDstrbtonRpsChng) + 1
+    smplngDstrbtonRpsChng[newRow,"reps"] <- i
+    smplngDstrbtonRpsChng[newRow,"x_bar"] <- mean(nsample$Age,na.rm = T)
+  }
+}
+
+gSamplingReps <- smplngDstrbtonRpsChng %>%
+  plot_ly(
+    x = ~x_bar,
+    frame = ~reps,
+    type = "histogram"
+  )
+gSamplingReps
+```
+Q12)
+While no. of sample size increase the variability of sampling distribution decrease and the mean increase. 
+Q)13,14,15
+```{r}
+sizes <- seq(20,200,20)
+smplngDstrbtonSzChng <- tibble()
+for(i in sizes){
+  for(y in 1:1500){
+    nsample <- sample_n(train,size=i,replace=T) %>%
+      select(Age)
+    newRow <- nrow(smplngDstrbtonSzChng) + 1
+    smplngDstrbtonSzChng[newRow,"sizes"] <- i
+    smplngDstrbtonSzChng[newRow,"x_bar"] <- mean(nsample$Age,na.rm = T)
+  }
+}
+gSamplingSize <- smplngDstrbtonSzChng %>%
+  plot_ly(
+    x = ~x_bar,
+    frame = ~sizes,
+    type = "histogram"
+  )
+gSamplingSize
+```
+Q16)While no. of sample size increase the variability of sampling distribution decrease,and The sample distribution mean will be normally distributed as long as the sample size is more than 30.
+Q17,18)
+```{r}
+sizes <- seq(2,50,2)
+smplngDstrbtonSzChng <- tibble()
+for(i in sizes){
+  for(y in 1:1500){
+    nsample <- sample_n(train,size=i,replace=T) %>%
+      select(Age)
+    newRow <- nrow(smplngDstrbtonSzChng) + 1
+    smplngDstrbtonSzChng[newRow,"sizes"] <- i
+    smplngDstrbtonSzChng[newRow,"x_bar"] <- sd(nsample$Age,na.rm = T)**2
+  }
+}
+gSamplingSize <- smplngDstrbtonSzChng %>%
+  plot_ly(
+    x = ~variance,
+    frame = ~sizes,
+    type = "histogram"
+  )
+gSamplingSize
+```
