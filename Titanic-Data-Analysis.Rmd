@@ -7,21 +7,23 @@ author:
   - "Ahmed Dawood"
   - "Alia Medhat"
 output: 
+  html_document:
+    toc: yes
+    df_print: paged
   hrbrthemes::ipsum_pdf:
     toc: yes
     number_sections: yes
     includes:
       in_header: preamble.tex
     highlight: pygments
-  html_document:
-    toc: yes
-    df_print: paged
-    
+always_allow_html: true
 ---
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE,  dev = "cairo_pdf")
 ```
+# Introdcution
 
+To answer our questions we first need to have a preliminary look at our data, so that we can get a better a idea what we are dealing with, as well as the possible missing data and relationships that exist 
 # Preliminary Look at the data
 
 We need first to define the data we have.   
@@ -70,24 +72,35 @@ summary(train)
 ```
 
 Checking for Missing values in each feature
+
 ```{r Missing Values}
 colSums(is.na(train))
 ```
+
 ## Categories of Features
+
 ### Qualitive 
+
 Categorical: Survived, Sex, and Embarked.
 Ordinal: Pclass.
 Nominal: Name.
+
 ### Quantitive
-Continous: Age, Fare.
+
+Continuous: Age, Fare.
 Discrete: SibSp, Parch.
+
 ### Mix types
+
 Ticket is a mix of numeric and alphanumeric data types
 Cabin is mix between alpha and numeric
+
 ## Plotting The Data
 
 ### Correlation Matrix
+
 We are going to use correlation matrix of the numerical data to assess the correlation, which might gives a better idea of which feature might be important
+
 ```{r Correlation Matrix,fig.height=4.5, fig.width=4.5,fig.align='center'}
 correlationMatrix <- train %>%
   filter(!is.na(Age)) %>%
@@ -104,7 +117,8 @@ correlationMatrix
 
 The fare features seems to be the most correlated feature to survival of the passengers, but it doesn't negate the importance of the other features in the data. Which means that we will start by comparing the each that we consider to be important against survival feature
 
-### Class of Passenger
+### Class of Passenger Vs Survived
+
 ```{r PclassVSSurvived,fig.height=3.5, fig.width=3.5,fig.align='center'}
 gPclassSurvived <- train %>%
   select(Pclass,Survived) %>%
@@ -118,7 +132,8 @@ gPclassSurvived <- train %>%
 gPclassSurvived
 ```
 
-### Siblings and Spouses
+### Siblings and Spouses Vs Survived
+
 ```{r SibSpVSSurvived,fig.height=3.5, fig.width=3.5,fig.align='center'}
 gSibSpSurvived <- train %>%
   select(SibSp,Survived) %>%
@@ -132,7 +147,8 @@ gSibSpSurvived <- train %>%
 gSibSpSurvived
 ```
 
-### Number of children/parents
+### Number of children/parents Vs Survived
+
 ```{r fig.height=3.5, fig.width=3.5,fig.align='center'}
 gParchSurvived <- train %>%
   select(Parch,Survived) %>%
@@ -146,6 +162,7 @@ gParchSurvived
 ```
 
 ### Gender VS Survived
+
 ```{r fig.height=3.5,fig.width=3.5,fig.align='center'}
 gSexSurvived <- train %>%
   select(Sex,Survived) %>%
@@ -157,6 +174,8 @@ gSexSurvived <- train %>%
   theme_ipsum_rc()
 gSexSurvived
 ```
+
+### Dashboard of the previous graphs
 
 ```{r}
 gridExtra::grid.arrange(gPclassSurvived,
@@ -175,9 +194,6 @@ train %>%
             surival_sd = sd(Survived,na.rm = T))
 
 ```
-# Description of the data
-## Categorical Features
-## Numerical Features
 
 # kernel distribution
 
@@ -201,64 +217,59 @@ $$ \hat{f_h} = \frac{1}{n} \sum^n_{i = 1} K(x-x_i)  = \frac{1}{nh} K\left(\frac{
 $$
 \hat{f_h} = \frac{1}{h} \sum^N_{i=1} w_i K \left(\frac{x-x_i}{h}\right), \qquad \text{where} \sum^N_{i= 1} w_i  = 1
 $$
- 
-![](./img/fig-1.png)
- 
-![](./img/fig-2.png)
- 
-![](./img/fig-3.png)
 
 ## Kernel Function
 
 1. Box
 2. Triangle
 3. Normal
-4. Epanechnikov
+4. Pantechnicon
 
-Each density curve uses the same input data, but applies a different kernel smoothing function to generate the pdf. The density estimates are roughly comparable, but the shape of each curve varies slightly. For example, the box kernel produces a density curve that is less smooth than the others.
+Each density curve uses the same input data, but applies a different kernel smoothing function to generate the pdf.
+The density estimates are roughly comparable, but the shape of each curve varies slightly.
+For example, the box kernel produces a density curve that is less smooth than the others.
 
-The choice of bandwidth value controls the smoothness of the resulting probability density curve
-(higher value of h more smoothing )
+The choice of bandwidth value controls the smoothness of the resulting probability density curve (higher value of $h$ more smoothing)
 
 
 Specifying a smaller bandwidth produces a very rough curve, but reveals that there might be two major peaks in the data. Specifying a larger bandwidth produces a curve nearly identical to the kernel function 
-Choosing the optimal (h) bandwidth methods :
-1-	Silverman’s rule of thump that computes an optimal h by assuming that data is normally distributed 
-2-	Improved Sheather jones (ISJ) an algorithm is more robust with multimodality data or a lot of data (one disadvantage is it needs to large data )
+Choosing the optimal ($h$) bandwidth methods :
 
+1. Silverman’s rule of thump that computes an optimal h by assuming that data is normally distributed 
+2. Improved Sheather Jones (ISJ) an algorithm is more robust with multimodality data or a lot of data (one disadvantage is it needs to large data )
 
-Bounded domains data : have a constrains like data couldn’t be negative ( -ve lead to probability = 0)
-Mirror method
-1-	Mirror the data 
-2-	Sum the original and mirrored kernel density estimate
-3-	Chop it so that zero at the boundary side 
+Bounded domains data: have a constrains like data couldn’t be negative ( -ve lead to probability = 0)
 
-2D : 
+## Mirror method
 
-h : could be matrix (different h in different directions )
-the choice of norm comes into d>=2
-the p-norm is  $||x||_p := (\sum_{i=1} |x|^p)^{\frac{1}{p}}$
-  norm-p =1    manhattan distance
-  norm-p =2    ecludian norm
-  
-  norm-p =inf   maximum norm
-(it’s not abvious in every case which norm is the correct one)
+1.	Mirror the data 
+2.	Sum the original and mirrored kernel density estimate
+3.	Chop it so that zero at the boundary side 
+
+## 2D
+$h$ : could be matrix (different $h$ in different directions)
+
+The choice of norm comes into $d \ge 2$
+
+The p-norm is  $||x||_p := (\sum_{i=1} |x|^p)^{\frac{1}{p}}$
+- norm-p =1    Manhattan distance
+- norm-p =2    Euclidean norm
+- norm-p =inf   maximum norm
+(it’s not obvious in every case which norm is the correct one)
 
 standard euclidean distance is good choice because it invariant under rotation 
 as large data choice of k and p isn’t important so 
-### Questions
+
+# Answering our Questions
+
+## Acurrate summary of our data.
 Q3)
 i) 
-```{r}
-sum(is.na(titanic$Age))
-```
+
 ii)??
 iii) Yes, by interval estimation
 iv)??
 Q4)
-```{r}
-titanic=na.omit(titanic)
-```
 Q5)
 ```{r}
 gAgeDensity <- train %>%
@@ -297,11 +308,6 @@ gFareDensity <- train %>%
   )
 
 gFareDensity 
-```
-Q7)
-```{r}
-mean(titanic$Age, na.rm = T)
-sd(titanic$Age,na.rm =T)
 ```
 Q8)
 Q)9,10,11
@@ -360,7 +366,7 @@ for(i in sizes){
       select(Age)
     newRow <- nrow(smplngDstrbtonSzChng) + 1
     smplngDstrbtonSzChng[newRow,"sizes"] <- i
-    smplngDstrbtonSzChng[newRow,"x_bar"] <- sd(nsample$Age,na.rm = T)**2
+    smplngDstrbtonSzChng[newRow,"variance"] <- sd(nsample$Age,na.rm = T)**2
   }
 }
 gSamplingSize <- smplngDstrbtonSzChng %>%

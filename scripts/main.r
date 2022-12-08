@@ -181,7 +181,7 @@ train$Age <- mice_output$Age
 
 colSums(is.na(train))
 # ---- ggploat ----
-numOfSamples <- c(50,100,1000)
+numOfSamples <- seq(50,1000,50)
 smplngDstrbtonRpsChng <- tibble()
 for(i in numOfSamples){
   for(y in 1:i){
@@ -201,7 +201,7 @@ gSamplingReps <- smplngDstrbtonRpsChng %>%
   )
 gSamplingReps
 
-sizes <- seq(20,200,20)
+sizes <- seq(20,260,20)
 smplngDstrbtonSzChng <- tibble()
 for(i in sizes){
   for(y in 1:1500){
@@ -220,6 +220,7 @@ gSamplingSize <- smplngDstrbtonSzChng %>%
   )
 gSamplingSize
 
+g
 
 #-------Additional Graphs-----
 a <- ggplot(df[(!is.na(df$Survived) & !is.na(df$Age)),],
