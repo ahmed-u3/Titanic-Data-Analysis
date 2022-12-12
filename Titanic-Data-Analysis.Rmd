@@ -1,52 +1,53 @@
 ---
 title: "Titanic Data Analysis"
-author:
-- Ahmed Ashraf Mohamed
-- Omar Gamal Abdelaziz
-- Ahmed Yousri
-- Ahmed Dawood
-- Alia Medhat
+author: 
+  - "Ahmed Ashraf"
+  - "Omar Gamal Abdelaziz"
+  - "Ahmed Yousri"
+  - "Ahmed Dawood"
+  - "Alia Medhat"
 output:
+  html_notebook:
+    toc: yes
   pdf_document:
     toc: yes
     number_sections: yes
     includes:
       in_header: preamble.tex
     highlight: pygments
-  hrbrthemes::ipsum_pdf:
-    toc: yes
-    number_sections: yes
-    includes:
-      in_header: preamble.tex
-    highlight: pygments
-  html_document:
-    toc: yes
-    df_print: paged
 always_allow_html: yes
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE,  dev = "cairo_pdf")
-```
-# Introdcution
-In this project we are trying first to explore our data to get a better understanding 
-To answer our questions we first need to have a preliminary look at our data, so that we can get a better a idea what we are dealing with, as well as the possible missing data and relationships that exist 
+
+# Introduction
+
+In this project we are trying first to explore our data to get a better
+understanding To answer our questions we first need to have a
+preliminary look at our data, so that we can get a better a idea what we
+are dealing with, as well as the possible missing data and relationships
+that exist
+
 ## Preliminary Look at the data
 
-We need first to define the data we have.   
+We need first to define the data we have.
 
-| Variable | Definition                                    | Key                                            |
+| Variable | Definition                                    | Key                                             |
 |:-------------------|:-------------------------|:-------------------------|
-| survival | Survival                                      | 0 = No, 1 = yes                                |
-| pclass   | ticket class                                  | 1 = 1st, 2 = 2nd, 3 = 3rd                      |
-| sex      | sex                                           |                                                |
-| age      | Age in year                                   |                                                |
-| sibsp    | Number of siblings/spouses aboard the titanic |                                                |
-| parch    | Number of parents/children aboard the Titanic |                                                |
-| ticket   | ticket number(unique)                         |                                                |
-| fare     | Passenger fare                                |                                                |
-| cabin    | Cabin number                                  |                                                |
-| embarked | port of embarkation                           | C = Cherbourg, Q = Queenstown, S = Southampton |
-## Loading the packages and the Data 
+| survival | Survival                                      | 0 = No, 1 = yes                                 |
+| pclass   | ticket class                                  | 1 = 1st, 2 = 2nd, 3 = 3rd                       |
+| sex      | sex                                           |                                                 |
+| age      | Age in year                                   |                                                 |
+| sibsp    | Number of siblings/spouses aboard the titanic |                                                 |
+| parch    | Number of parents/children aboard the Titanic |                                                 |
+| ticket   | ticket number(unique)                         |                                                 |
+| fare     | Passenger fare                                |                                                 |
+| cabin    | Cabin number                                  |                                                 |
+| embarked | port of embarkation                           | C = Cherbourg, Q = Queens-town, S = Southampton |
+
+## Loading the packages and the Data
+
 ```{r Loading Packages, echo=TRUE, message=FALSE, results='hide'}
 # Loading Packages
 ## tidyverse loads dplyr and readr
@@ -99,34 +100,33 @@ summary(train)
 
 ## Categories of Features
 
-> Quantitative data are measures of values or counts and are expressed as numbers.
+> Quantitative data are measures of values or counts and are expressed
+> as numbers.
 
-> Qualitative data are measures of 'types' and may be represented by a name, symbol, or a number code.
+> Qualitative data are measures of 'types' and may be represented by a
+> name, symbol, or a number code.
 
+### Qualitive
 
-### Qualitive 
-
-Categorical: Survived, Sex, and Embarked.
-Ordinal: Pclass.
-Nominal: Name.
+Categorical: Survived, Sex, and Embarked. Ordinal: Pclass. Nominal:
+Name.
 
 ### Quantitive
 
-Continuous: Age, Fare.
-Discrete: SibSp, Parch.
+Continuous: Age, Fare. Discrete: SibSp, Parch.
 
 ### Mix types
 
-Ticket is a mix of numeric and alphanumeric data types
-Cabin is mix between alpha and numeric
+Ticket is a mix of numeric and alphanumeric data types Cabin is mix
+between alpha and numeric
 
 ## Exploring Missing Data.
+
 Checking for Missing values in each feature
 
 ```{r Missing Values}
 colSums(is.na(train))
 ```
-
 
 ```{r Missing values plot}
 missing_values <- train %>% summarize_all(funs(sum(is.na(.))/n()))
@@ -145,32 +145,40 @@ missing_values %>%
   theme_ipsum()
 ```
 
-
 ### Missing data, it is normal?
 
-It is quite normal to see missing data in any data-set as such data is collected by manually which means that there might be some error.
-Missing data present various problems. 
-First, the absence of data reduces statistical power, which refers to the probability that the test will reject the null hypothesis when it is false.
-Second, the lost data can cause bias in the estimation of parameters.
-Third, it can reduce the representativeness of the samples.
+It is quite normal to see missing data in any data-set as such data is
+collected by manually which means that there might be some error.
+Missing data present various problems. First, the absence of data
+reduces statistical power, which refers to the probability that the test
+will reject the null hypothesis when it is false. Second, the lost data
+can cause bias in the estimation of parameters. Third, it can reduce the
+representativeness of the samples.
 
 ### The solution to the missing data
 
 #### Removal
 
-The removal of the observations that contain missing might cause a bigger issue where it might an even bigger loss of information which cause bias in our estimation.
-But on close observation of our data we can identify that there are some features that are not extremely useful and contain missing data, so we can drop such features.
+The removal of the observations that contain missing might cause a
+bigger issue where it might an even bigger loss of information which
+cause bias in our estimation. But on close observation of our data we
+can identify that there are some features that are not extremely useful
+and contain missing data, so we can drop such features.
+
 ```{r droping cabin}
 train <- train %>%
   select(!Cabin)
 summary(train)
 ```
 
-#### Imputation 
+#### Imputation
 
-Imputing the missing data gives the advantage that we use a learning model to predict such missing data and maintain the distribution of our data.
+Imputing the missing data gives the advantage that we use a learning
+model to predict such missing data and maintain the distribution of our
+data.
 
 ## Histogram of Age feature.
+
 ```{r Age histogram}
 gAgeDensity <- train %>%
   select(Age) %>%
@@ -189,11 +197,16 @@ gAgeDensity <- train %>%
 
 gAgeDensity
 ```
+
+### Population mean and standard deviation of Age feature Before imputation
+
 ```{r Summary of Age feature}
 train %>%
   summarise(Age_mean = mean(Age,na.rm = T), Age_sd = sd(Age,na.rm = T))
 ```
+
 ## Histogram of Fare feature
+
 ```{r Histogram of Fare Feature}
 gFareDensity <- train %>%
   select(Fare) %>%
@@ -213,10 +226,14 @@ gFareDensity <- train %>%
 
 gFareDensity 
 ```
+
+### Population mean and standard deviaiton of Fare feature.
+
 ```{r Summary of Fare Feature}
 train %>%
   summarise(Fare_mean = mean(Fare,na.rm = T), Fare_sd = sd(Fare,na.rm = T))
 ```
+
 ## Imputing the missing age feature
 
 ```{r Imputation}
@@ -259,19 +276,40 @@ missing_values %>%
   scale_y_continuous(labels=scales::percent) +
   theme_ipsum()
 ```
+
+### Population mean and standard deviation
+
 ```{r Summary of Age feature After Imputation}
 train %>%
   summarise(Age_mean = mean(Age,na.rm = T), Age_sd = sd(Age,na.rm = T))
 ```
 
+## Determining the distrubutuion of Age and Fare By inspection
+
+Though determination of the distribution using inspection is likely not
+going to be effective we are going to the KS-test in a later section
+
+### Age
+
+The histogram of the Age feature look very much like a normal
+distribution, yet it's not a normal distribution itself.
+
+### Fare
+
+The histogram of the Fare feature fits the chi-square distribution.
 
 ## Plotting The Data
 
+We include even more plots of our data to get a better understanding of
+it, help us see hidden correlations and ways to facilitate our analysis
+
 ### Correlation Matrix
 
-We are going to use correlation matrix of the numerical data to assess the correlation, which might gives a better idea of which feature might be important
+We are going to use correlation matrix of the numerical data to assess
+the correlation, which might gives a better idea of which feature might
+be important
 
-```{r Correlation Matrix,fig.height=4.5, fig.width=4.5,fig.align='center'}
+```{r Correlation Matrix, fig.align='center'}
 correlationMatrix <- train %>%
   filter(!is.na(Age)) %>%
   select(Survived, Pclass,Age,SibSp,Parch,Fare) %>%
@@ -285,11 +323,14 @@ correlationMatrix <- train %>%
 correlationMatrix
 ```
 
-The fare features seems to be the most correlated feature to survival of the passengers, but it doesn't negate the importance of the other features in the data. Which means that we will start by comparing the each that we consider to be important against survival feature
+The fare features seems to be the most correlated feature to survival of
+the passengers, but it doesn't negate the importance of the other
+features in the data. Which means that we will start by comparing the
+each that we consider to be important against survival feature
 
 ### Class of Passenger Vs Survived
 
-```{r PclassVSSurvived,fig.height=3.5, fig.width=3.5,fig.align='center'}
+```{r PclassVSSurvived,fig.align='center'}
 gPclassSurvived <- train %>%
   select(Pclass,Survived) %>%
   ggplot(aes(as_factor(Pclass),fill=as_factor(Survived))) + 
@@ -302,9 +343,10 @@ gPclassSurvived <- train %>%
 gPclassSurvived
 ```
 
+From this Plot, it seems clear that people from the upper classes had higher survival rates, thought this seemed obvious from the beginning.
 ### Siblings and Spouses Vs Survived
 
-```{r SibSpVSSurvived,fig.height=3.5, fig.width=3.5,fig.align='center'}
+```{r SibSpVSSurvived,fig.align='center'}
 gSibSpSurvived <- train %>%
   select(SibSp,Survived) %>%
   ggplot(aes(as_factor(SibSp),fill=as_factor(Survived))) +
@@ -317,9 +359,11 @@ gSibSpSurvived <- train %>%
 gSibSpSurvived
 ```
 
+This plot highlight a point that might be counter-intuitive that people that have no siblings or spouses had lower survival rates than those with at least one sibling or a spouse
+
 ### Number of children/parents Vs Survived
 
-```{r fig.height=3.5, fig.width=3.5,fig.align='center'}
+```{r fig.align='center'}
 gParchSurvived <- train %>%
   select(Parch,Survived) %>%
   ggplot(aes(as_factor(Parch),fill=as_factor(Survived))) + 
@@ -333,7 +377,7 @@ gParchSurvived
 
 ### Gender VS Survived
 
-```{r fig.height=3.5,fig.width=3.5,fig.align='center'}
+```{r fig.align='center'}
 gSexSurvived <- train %>%
   select(Sex,Survived) %>%
   ggplot(aes(as_factor(Sex),fill = as_factor(Survived))) + 
@@ -342,7 +386,7 @@ gSexSurvived <- train %>%
   labs(x = "Sex",y = "Survival Rate")+
   scale_fill_discrete(name = "Survived", labels = c("Didn't Survive","Survived")) +
   theme_ipsum_rc()
-gSexSurvived
+print(gSexSurvived)
 ```
 
 ### Dashboard of the previous graphs
@@ -365,21 +409,90 @@ train %>%
 
 ```
 
+## Sampling
+
+### Random sample of size of 50 (Age)
+
+```{r Sampling-1}
+sample_50 <- sample_n(train,size = 50,replace = T) %>%
+  summarise(mean = mean(Age), sd = sd(Age))
+sample_50
+```
+### Sampling distrubution with a fixed size (50)
+```{r}
+numOfSamples <- seq(50,1000,50)
+
+smplngDstrbtnRpsChng <- tibble()
+
+for(i in numOfSamples){
+  
+  for(y in 1:i){
+    nsample <- sample_n(train,size=50,replace=T) %>%
+      select(Age)
+    newRow <- nrow(smplngDstrbtnRpsChng) + 1
+    smplngDstrbtnRpsChng[newRow,"reps"] <- i
+    smplngDstrbtnRpsChng[newRow,"x_bar"] <- mean(nsample$Age,na.rm = T)
+  }
+  
+}
+
+gSamplingReps <- smplngDstrbtnRpsChng %>%
+  plot_ly(
+    x = ~x_bar,
+    frame = ~reps,
+    type = "histogram"
+  )
+gSamplingReps
+```
+While no. of sample size increase the variability of sampling
+distribution decrease and the mean increase.
+
+### Sampling distrubution with a fixed repetitions and different sizes
+
+```{r sampling-distrubution-sizes}
+sizes <- seq(20,260,20)
+smplngDstrbtnSzChng <- tibble()
+for(i in sizes){
+  for(y in 1:1500){
+    nsample <- sample_n(train,size=i,replace=T) %>%
+      select(Age)
+    newRow <- nrow(smplngDstrbtnSzChng) + 1
+    smplngDstrbtnSzChng[newRow,"sizes"] <- i
+    smplngDstrbtnSzChng[newRow,"x_bar"] <- mean(nsample$Age,na.rm = T)
+  }
+}
+gSamplingSize <- smplngDstrbtnSzChng %>%
+  plot_ly(
+    x = ~x_bar,
+    frame = ~sizes,
+    type = "histogram"
+  )
+gSamplingSize
+```
+
+While no. of sample size increase the variability of sampling
+distribution decrease,and The sample distribution mean will be normally
+distributed as long as the sample size is more than 30.
+
 # kernel distribution
 
-> A kernel distribution is a nonparametric representation of the probability density function  ($pdf$) of a random variable in any population 
+> A kernel distribution is a nonparametric representation of the
+> probability density function ($pdf$) of a random variable in any
+> population
 
-The kernel smoothing function defines the shape of the curve used to generate the pdf 
-Kernel distribution is Quote from histogram in other word (smooth representation of a histogram)
-That the integral =1 
-There is a benefit of smooth representation of a histogram like Ignores irregularities and outliers , more efficient in approximation so it deals better with large data than small data 
+The kernel smoothing function defines the shape of the curve used to
+generate the pdf Kernel distribution is Quote from histogram in other
+word (smooth representation of a histogram) That the integral =1 There
+is a benefit of smooth representation of a histogram like Ignores
+irregularities and outliers , more efficient in approximation so it
+deals better with large data than small data
 
 $$ \hat{f_h} = \frac{1}{n} = \sum^n_{i = 1} K(x-x_i)  = \frac{1}{nh} K\left(\frac{x-x_i}{h}\right) $$
-
 
 ## Rules
 
 ### Non-weighted Data
+
 $$ \hat{f_h} = \frac{1}{n} \sum^n_{i = 1} K(x-x_i)  = \frac{1}{nh} K\left(\frac{x-x_i}{h}\right) $$
 
 ### Weighted Data
@@ -390,57 +503,61 @@ $$
 
 ## Kernel Function
 
-1. Box
-2. Triangle
-3. Normal
-4. Pantechnicon
+1.  Box
+2.  Triangle
+3.  Normal
+4.  Pantechnicon
 
-Each density curve uses the same input data, but applies a different kernel smoothing function to generate the pdf.
-The density estimates are roughly comparable, but the shape of each curve varies slightly.
-For example, the box kernel produces a density curve that is less smooth than the others.
+Each density curve uses the same input data, but applies a different
+kernel smoothing function to generate the pdf. The density estimates are
+roughly comparable, but the shape of each curve varies slightly. For
+example, the box kernel produces a density curve that is less smooth
+than the others.
 
-The choice of bandwidth value controls the smoothness of the resulting probability density curve (higher value of $h$ more smoothing)
+The choice of bandwidth value controls the smoothness of the resulting
+probability density curve (higher value of $h$ more smoothing)
 
-
-Specifying a smaller bandwidth produces a very rough curve, but reveals that there might be two major peaks in the data. Specifying a larger bandwidth produces a curve nearly identical to the kernel function 
+Specifying a smaller bandwidth produces a very rough curve, but reveals
+that there might be two major peaks in the data. Specifying a larger
+bandwidth produces a curve nearly identical to the kernel function
 Choosing the optimal ($h$) bandwidth methods :
 
-1. Silverman’s rule of thump that computes an optimal h by assuming that data is normally distributed 
-2. Improved Sheather Jones (ISJ) an algorithm is more robust with multimodality data or a lot of data (one disadvantage is it needs to large data )
+1.  Silverman's rule of thump that computes an optimal h by assuming
+    that data is normally distributed
+2.  Improved Sheather Jones (ISJ) an algorithm is more robust with
+    multimodality data or a lot of data (one disadvantage is it needs to
+    large data )
 
-Bounded domains data: have a constrains like data couldn’t be negative ( -ve lead to probability = 0)
+Bounded domains data: have a constrains like data couldn't be negative (
+-ve lead to probability = 0)
 
 ## Mirror method
 
-1.	Mirror the data 
-2.	Sum the original and mirrored kernel density estimate
-3.	Chop it so that zero at the boundary side 
+1.  Mirror the data
+2.  Sum the original and mirrored kernel density estimate
+3.  Chop it so that zero at the boundary side
 
 ## 2D
+
 $h$ : could be matrix (different $h$ in different directions)
 
 The choice of norm comes into $d \ge 2$
 
-The p-norm is  $||x||_p := (\sum_{i=1} |x|^p)^{\frac{1}{p}}$
-- norm-p =1    Manhattan distance
-- norm-p =2    Euclidean norm
-- norm-p =inf   maximum norm
-(it’s not obvious in every case which norm is the correct one)
+The p-norm is $||x||_p := (\sum_{i=1} |x|^p)^{\frac{1}{p}}$ - norm-p =1
+Manhattan distance - norm-p =2 Euclidean norm - norm-p =inf maximum norm
+(it's not obvious in every case which norm is the correct one)
 
-standard euclidean distance is good choice because it invariant under rotation 
-as large data choice of k and p isn’t important so 
+standard euclidean distance is good choice because it invariant under
+rotation as large data choice of k and p isn't important so
 
 # Answering our Questions
 
 ## Acurrate summary of our data.
-Q3)
-i) 
 
-ii)??
-iii) Yes, by interval estimation
-iv)??
-Q4)
-Q5)
+Q3) i)
+
+ii)?? iii) Yes, by interval estimation iv)?? Q4) Q5)
+
 ```{r}
 gAgeDensity <- train %>%
   select(Age) %>%
@@ -459,7 +576,9 @@ gAgeDensity <- train %>%
 
 gAgeDensity
 ```
+
 Q6)//?
+
 ```{r}
 gFareDensity <- train %>%
   select(Fare) %>%
@@ -477,11 +596,12 @@ gFareDensity <- train %>%
     size = 4
   )
 
-gFareDensity 
+gFareDensity
 ```
-Q8)
-Q)9,10,11
-```{r eval=FALSE, include=FALSE}
+
+Q8) Q)9,10,11
+
+```{r}
 numOfSamples <- c(50,100,1000)
 smplngDstrbtonRpsChng <- tibble()
 for(i in numOfSamples){
@@ -500,11 +620,12 @@ gSamplingReps <- smplngDstrbtonRpsChng %>%
     frame = ~reps,
     type = "histogram"
   )
+
 gSamplingReps
 ```
-Q12)
-While no. of sample size increase the variability of sampling distribution decrease and the mean increase. 
-Q)13,14,15
+
+Q12)  Q)13,14,15
+
 ```{r eval=FALSE, include=FALSE}
 sizes <- seq(20,200,20)
 smplngDstrbtonSzChng <- tibble()
@@ -523,10 +644,12 @@ gSamplingSize <- smplngDstrbtonSzChng %>%
     frame = ~sizes,
     type = "histogram"
   )
+
 gSamplingSize
 ```
-Q16)While no. of sample size increase the variability of sampling distribution decrease,and The sample distribution mean will be normally distributed as long as the sample size is more than 30.
-Q17,18)
+
+Q16) Q17,18)
+
 ```{r eval=FALSE, include=FALSE}
 sizes <- seq(2,50,2)
 smplngDstrbtonSzChng <- tibble()
@@ -545,5 +668,6 @@ gSamplingSize <- smplngDstrbtonSzChng %>%
     frame = ~sizes,
     type = "histogram"
   )
+
 gSamplingSize
 ```

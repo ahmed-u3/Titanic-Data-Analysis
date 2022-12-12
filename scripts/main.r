@@ -224,14 +224,14 @@ for(i in numOfSamples){
   for(y in 1:i){
     nsample <- sample_n(train,size=50,replace=T) %>%
       select(Age)
-    newRow <- nrow(smplngDstrbtonRpsChng) + 1
-    smplngDstrbtonRpsChng[newRow,"reps"] <- i
-    smplngDstrbtonRpsChng[newRow,"x_bar"] <- mean(nsample$Age,na.rm = T)
+    newRow <- nrow(smplngDstrbtnRpsChng) + 1
+    smplngDstrbtnRpsChng[newRow,"reps"] <- i
+    smplngDstrbtnRpsChng[newRow,"x_bar"] <- mean(nsample$Age,na.rm = T)
   }
   
 }
 
-gSamplingReps <- smplngDstrbtonRpsChng %>%
+gSamplingReps <- smplngDstrbtnRpsChng %>%
   plot_ly(
     x = ~x_bar,
     frame = ~reps,
