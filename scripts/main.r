@@ -38,18 +38,18 @@ test <- read_csv("data/test.csv")
 df <- bind_rows(train,test)
 
 # Identifying our features
-colnames(df)
+colnames(train)
 
 # Number of missing values in each feature
-colSums(is.na(df))
+colSums(is.na(train))
 
-# We can observe that the cabin feature has the most missing values in our traning data, and it's most probably not going to be useful initially, which means that we can drop it
+# We can observe that the cabin feature has the most missing values in our training data, and it's most probably not going to be useful initially, which means that we can drop it
 
 
 #-------Summary of Data----------
-summary(df)
+summary(train)
 
-missing_values <- df %>% summarize_all(funs(sum(is.na(.))/n()))
+missing_values <- train %>% summarize_all(funs(sum(is.na(.))/n()))
 
 missing_values <- gather(missing_values, key="feature", value="missing_pct")
 
@@ -67,10 +67,10 @@ missing_values %>%
 sapply(train , function(x) {sum(is.na(x))})
 
 # Viewing the first six rows of the data
-head(df)
+head(train)
 
 ## Correlation Matrix
-correlationMatrix <- df %>%
+correlationMatrix <- train %>%
   filter(!is.na(Age)) %>%
   select(Survived, Pclass,Age,SibSp,Parch,Fare) %>%
   cor() %>%

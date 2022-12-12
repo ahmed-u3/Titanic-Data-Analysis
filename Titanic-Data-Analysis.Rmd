@@ -88,14 +88,49 @@ df <- bind_rows(train,test)
 ## Summary of Data
 
 ```{r Data Summary}
-summary(df)
+summary(train)
 ```
 
+## Exploring Missing Data.
 Checking for Missing values in each feature
 
 ```{r Missing Values}
-colSums(is.na(df))
+colSums(is.na(train))
 ```
+
+```{r Missing values plot}
+missing_values <- train %>% summarize_all(funs(sum(is.na(.))/n()))
+
+missing_values <- gather(missing_values, key="feature", value="missing_pct")
+
+missing_values
+
+missing_values %>% 
+  ggplot(aes(x=reorder(feature,-missing_pct),y=missing_pct)) +
+  geom_bar(stat="identity",fill="red") +
+  coord_flip() + # to flip the graph
+  xlab("Features") +
+  ylab("Percentage of missing values")+
+  scale_y_continuous(labels=scales::percent) +
+  theme_ipsum()
+```
+### Missing data, it is normal?
+
+It is quite normal to see missing data in any data-set as such data is collected by manually which means that there might be some error.
+Missing data present various problems. 
+First, the absence of data reduces statistical power, which refers to the probability that the test will reject the null hypothesis when it is false.
+Second, the lost data can cause bias in the estimation of parameters.
+Third, it can reduce the representativeness of the samples.
+
+### The solution to the missing data
+
+#### Removal
+
+The removal of the observations that contain missing might cause a bigger issue where it might an even bigger loss of information which cause bias in our estimation.
+
+#### Imputation 
+
+Imputing the missing data gives the advantage that we use a learning model to predict such missing data and maintain the distrubution of our data.
 
 ## Categories of Features
 
