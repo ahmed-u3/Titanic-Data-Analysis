@@ -22,9 +22,9 @@ always_allow_html: true
 knitr::opts_chunk$set(echo = TRUE,  dev = "cairo_pdf")
 ```
 # Introdcution
-
+In this project we are trying first to explore our data to get a better understanding 
 To answer our questions we first need to have a preliminary look at our data, so that we can get a better a idea what we are dealing with, as well as the possible missing data and relationships that exist 
-# Preliminary Look at the data
+## Preliminary Look at the data
 
 We need first to define the data we have.   
 
@@ -43,22 +43,42 @@ We need first to define the data we have.
 ## Loading the packages and the Data 
 ```{r Loading Packages, echo=TRUE, message=FALSE, results='hide'}
 # Loading Packages
+## tidyverse loads dplyr and readr
 library(tidyverse)
+
+## To have different color maps
 library(viridis)
+
+## ggplot2 to produce different plots
 library(ggplot2)
+
+## uses ggplot2 to produce a correlation matrix -- the data must be in the correct form
 library(ggcorrplot)
-library(ggthemes)
+
+## Gives us better themes
 library(hrbrthemes)
+
+## to use skewness fun. to calculate skewness of the distribution
 library(e1071)
+
+## Multivariate imputation using chained equations -- to impute the missing values in our data
 library(mice)
+
+## Loads different statistical functions
 library(statsr)
+
+## To produce interactive plot
 library(plotly)
 
 
-
-# Loading Data
+# Loading Training Data
 train <- read_csv("data/train.csv")
+
+# Loading Testing Data
 test <- read_csv("data/test.csv")
+
+# Binding them into a full data frame
+df <- bind_rows(train,test)
 ```
 
 # Exploration Of The Data
@@ -68,13 +88,13 @@ test <- read_csv("data/test.csv")
 ## Summary of Data
 
 ```{r Data Summary}
-summary(train)
+summary(df)
 ```
 
 Checking for Missing values in each feature
 
 ```{r Missing Values}
-colSums(is.na(train))
+colSums(is.na(df))
 ```
 
 ## Categories of Features

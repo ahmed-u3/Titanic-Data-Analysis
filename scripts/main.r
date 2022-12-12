@@ -1,13 +1,30 @@
 # ----- Loading packages ---------
+
+## tidyverse loads dplyr and readr
 library(tidyverse)
+
+## To have different color maps
 library(viridis)
+
+## ggplot2 to produce different plots
 library(ggplot2)
+
+## uses ggplot2 to produce a correlation matrix -- the data must be in the correct form
 library(ggcorrplot)
-library(ggthemes)
+
+## Gives us better themes
 library(hrbrthemes)
+
+## to use skewness fun. to calculate skewness of the distribution
 library(e1071)
+
+## Multivariate imputation using chained equations -- to impute the missing values in our data
 library(mice)
+
+## Loads different statistical functions
 library(statsr)
+
+## To produce interactive plot
 library(plotly)
 
 
@@ -21,22 +38,39 @@ test <- read_csv("data/test.csv")
 df <- bind_rows(train,test)
 
 # Identifying our features
-colnames(train)
+colnames(df)
 
 # Number of missing values in each feature
-colSums(is.na(train))
+colSums(is.na(df))
 
 # We can observe that the cabin feature has the most missing values in our traning data, and it's most probably not going to be useful initially, which means that we can drop it
 
 
-# Summary of Data
-summary(train)
+#-------Summary of Data----------
+summary(df)
+
+missing_values <- df %>% summarize_all(funs(sum(is.na(.))/n()))
+
+missing_values <- gather(missing_values, key="feature", value="missing_pct")
+
+missing_values
+
+missing_values %>% 
+  ggplot(aes(x=reorder(feature,-missing_pct),y=missing_pct)) +
+  geom_bar(stat="identity",fill="red") +
+  coord_flip() + # to flip the graph
+  xlab("Features") +
+  ylab("Percentage of missing values")+
+  scale_y_continuous(labels=scales::percent) +
+  theme_ipsum()
+
+sapply(train , function(x) {sum(is.na(x))})
 
 # Viewing the first six rows of the data
-head(train)
+head(df)
 
 ## Correlation Matrix
-correlationMatrix <- train %>%
+correlationMatrix <- df %>%
   filter(!is.na(Age)) %>%
   select(Survived, Pclass,Age,SibSp,Parch,Fare) %>%
   cor() %>%
@@ -102,7 +136,7 @@ train %>%
             surival_sd = sd(Survived,na.rm = T))
 
 
-# Desnity Graphs
+# Density Graphs
 gAgeDensity <- train %>%
   select(Age) %>%
   ggplot(aes(Age, y = ..density..)) +
@@ -182,8 +216,11 @@ train$Age <- mice_output$Age
 colSums(is.na(train))
 # ---- ggploat ----
 numOfSamples <- seq(50,1000,50)
-smplngDstrbtonRpsChng <- tibble()
+
+smplngDstrbtnRpsChng <- tibble()
+
 for(i in numOfSamples){
+  
   for(y in 1:i){
     nsample <- sample_n(train,size=50,replace=T) %>%
       select(Age)
@@ -191,6 +228,7 @@ for(i in numOfSamples){
     smplngDstrbtonRpsChng[newRow,"reps"] <- i
     smplngDstrbtonRpsChng[newRow,"x_bar"] <- mean(nsample$Age,na.rm = T)
   }
+  
 }
 
 gSamplingReps <- smplngDstrbtonRpsChng %>%
@@ -202,7 +240,7 @@ gSamplingReps <- smplngDstrbtonRpsChng %>%
 gSamplingReps
 
 sizes <- seq(20,260,20)
-smplngDstrbtonSzChng <- tibble()
+smplngDstrbtnSzChng <- tibble()
 for(i in sizes){
   for(y in 1:1500){
     nsample <- sample_n(train,size=i,replace=T) %>%
@@ -219,9 +257,6 @@ gSamplingSize <- smplngDstrbtonSzChng %>%
     type = "histogram"
   )
 gSamplingSize
-
-g
-
 #-------Additional Graphs-----
 a <- ggplot(df[(!is.na(df$Survived) & !is.na(df$Age)),],
             aes(x = Age,
@@ -231,37 +266,23 @@ a <- ggplot(df[(!is.na(df$Survived) & !is.na(df$Age)),],
   scale_x_continuous(breaks = scales::pretty_breaks(n = 10)) + theme_ipsum()
 a
 
-missing_values <- titanic %>% summarize_all(funs(sum(is.na(.))/n()))
 
-missing_values <- gather(missing_values, key="feature", value="missing_pct")
-
-missing_values
-
-missing_values %>% 
-  ggplot(aes(x=reorder(feature,-missing_pct),y=missing_pct)) +
-  geom_bar(stat="identity",fill="red") +
-  coord_flip() + # to flip the graph
-  theme_bw() + # modify the theme (grid) 
-  xlab("Fraction of missing values") +
-  theme(axis.title.y = element_blank())
-
-sapply(titanic , function(x) {sum(is.na(x))})
-
-ggplot(titanic[!is.na(titanic$Survived),], aes(x = Survived, fill = Survived),) +
+ggplot(train[!is.na(train$Survived),], aes(x = Survived, fill = Survived),) +
   geom_bar(stat='count',) +
   labs(x = 'How many people died and survived on the Titanic?') +
   geom_label(stat='count',aes(label=..count..), size=7) +
   theme_grey(base_size = 18)
 
-p1 <- ggplot(titanic, aes(x = Sex, fill = Sex)) +
+p1 <- ggplot(train, aes(x = Sex, fill = Sex)) +
   geom_bar(stat='count', position='dodge') + theme_grey() +
   labs(x = 'All data') +
   geom_label(stat='count', aes(label=..count..)) +
   scale_fill_manual("legend", values = c("female" = "pink", "male" = "green"))
 
-p2 <- ggplot(titanic[!is.na(titanic$Survived),], aes(x = Sex, fill = Survived)) +
+p2 <- ggplot(train[!is.na(train$Survived),], aes(x = Sex, fill = Survived)) +
   geom_bar(stat='count', position='dodge') + theme_grey() +
   labs(x = 'Training data only') +
   geom_label(stat='count', aes(label=..count..))
 
-grid.arrange(p1,p2, nrow=1)
+gridExtra::grid.arrange(p1,p2, nrow=1)
+  
