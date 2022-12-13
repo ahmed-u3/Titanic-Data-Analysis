@@ -27,6 +27,9 @@ library(statsr)
 ## To produce interactive plot
 library(plotly)
 
+## To use bias function
+library(Metrics)
+
 
 # Loading Training Data
 train <- read_csv("data/train.csv")
@@ -418,6 +421,3 @@ mle <- optim(par = c(mu= .2 , sigma = 1.5),fn=NLL,data=nsample$Age,control = lis
 mle$par[1]
 
 bias(actual = mean(train$Age,na.rm = T), predicted = mle$par[1])
-
-
-  

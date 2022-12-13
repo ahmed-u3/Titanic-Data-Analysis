@@ -37,7 +37,7 @@ that exist
 We need first to define the data we have.
 
 | Variable | Definition                                    | Key                                             |
-|:-------------------|:-------------------------|:-------------------------|
+|:---------|:----------------------------------------------|:------------------------------------------------|
 | survival | Survival                                      | 0 = No, 1 = yes                                 |
 | pclass   | ticket class                                  | 1 = 1st, 2 = 2nd, 3 = 3rd                       |
 | sex      | sex                                           |                                                 |
@@ -80,6 +80,9 @@ library(statsr)
 ## To produce interactive plot
 library(plotly)
 
+## To use bias function
+library(Metrics)
+
 
 # Loading Training Data
 train <- read_csv("data/train.csv")
@@ -92,8 +95,6 @@ df <- bind_rows(train,test)
 ```
 
 # Exploration Of The Data
-
-## Description of the Data
 
 ## Summary of Data
 
@@ -239,6 +240,35 @@ train %>%
 
 ## Imputing the missing age feature
 
+### Correlation matrix before imputation
+
+We are going to use correlation matrix of the numerical data to assess
+the correlation, which might gives a better idea of which feature might
+be important
+
+The fare features seems to be the most correlated feature to survival of
+the passengers, but it doesn't negate the importance of the other
+features in the data. Which means that we will start by comparing the
+each that we consider to be important against survival feature
+
+We will print it once before imputation and the second time after imputation of our data to see an aspect of the data imputation
+
+```{r Correlation Matrix 1, fig.align='center'}
+correlationMatrix <- train %>%
+  filter(!is.na(Age)) %>%
+  select(Survived, Pclass,Age,SibSp,Parch,Fare) %>%
+  cor() %>%
+  ggcorrplot(lab = T,
+             ggtheme =theme_ipsum_rc(grid = F),
+             title="Correlation Matrix",hc.order=T,
+             colors =rev(viridis(3,alpha=0.7)),
+             digits = 1)
+
+correlationMatrix
+```
+
+### Imputation
+
 ```{r Imputation}
 #---------------MICE--------------
 set.seed(129)
@@ -279,6 +309,21 @@ missing_values %>%
   scale_y_continuous(labels=scales::percent) +
   theme_ipsum()
 ```
+### Correlation matrix after imputation
+
+```{r Correlation Matrix 2, fig.align='center'}
+correlationMatrix <- train %>%
+  filter(!is.na(Age)) %>%
+  select(Survived, Pclass,Age,SibSp,Parch,Fare) %>%
+  cor() %>%
+  ggcorrplot(lab = T,
+             ggtheme =theme_ipsum_rc(grid = F),
+             title="Correlation Matrix",hc.order=T,
+             colors =rev(viridis(3,alpha=0.7)),
+             digits = 1)
+
+correlationMatrix
+```
 
 ### Population mean and standard deviation
 
@@ -306,31 +351,6 @@ The histogram of the Fare feature fits the $\chi^2$ distribution.
 We include even more plots of our data to get a better understanding of
 it, help us see hidden correlations and ways to facilitate our analysis
 
-### Correlation Matrix
-
-We are going to use correlation matrix of the numerical data to assess
-the correlation, which might gives a better idea of which feature might
-be important
-
-```{r Correlation Matrix, fig.align='center'}
-correlationMatrix <- train %>%
-  filter(!is.na(Age)) %>%
-  select(Survived, Pclass,Age,SibSp,Parch,Fare) %>%
-  cor() %>%
-  ggcorrplot(lab = T,
-             ggtheme =theme_ipsum_rc(grid = F),
-             title="Correlation Matrix",hc.order=T,
-             colors =rev(viridis(3,alpha=0.7)),
-             digits = 1)
-
-correlationMatrix
-```
-
-The fare features seems to be the most correlated feature to survival of
-the passengers, but it doesn't negate the importance of the other
-features in the data. Which means that we will start by comparing the
-each that we consider to be important against survival feature
-
 ### Class of Passenger Vs Survived
 
 ```{r PclassVSSurvived,fig.align='center'}
@@ -347,6 +367,7 @@ gPclassSurvived
 ```
 
 From this Plot, it seems clear that people from the upper classes had higher survival rates, thought this seemed obvious from the beginning.
+
 ### Siblings and Spouses Vs Survived
 
 ```{r SibSpVSSurvived,fig.align='center'}
@@ -389,7 +410,7 @@ gSexSurvived <- train %>%
   labs(x = "Sex",y = "Survival Rate")+
   scale_fill_discrete(name = "Survived", labels = c("Didn't Survive","Survived")) +
   theme_ipsum_rc()
-print(gSexSurvived)
+gSexSurvived
 ```
 ### Survival Density and Age
 ```{r}
@@ -412,7 +433,8 @@ gridExtra::grid.arrange(gPclassSurvived,
                         gSibSpSurvived,
                         gSexSurvived,
                         gParchSurvived,
-                        nrow=2)
+                        gSurvivalAgeDensity,
+                        nrow=3)
 ```
 
 ```{r}
@@ -460,6 +482,7 @@ gSamplingReps <- smplngDstrbtnRpsChng %>%
   )
 gSamplingReps
 ```
+
 While no. of sample size increase the variability of sampling
 distribution decrease and the mean increase.
 
@@ -514,14 +537,50 @@ gSamplingSizeVariance
 ```
 
 ## MME and MLE
+
+$$ M_1 = E(x) = \frac{1}{n} \sum^{n}_{i = 1} x_i $$
+$$ M_2 = E(x^2) = \sigma^2 + (E(x))^2 = \frac{1}{n} \sum^{n}_{i = 1} {x_i}^2 $$
+$$ \mu = \frac{1}{2} \sum^{n}_{i =1} x_i = M_1 $$
+$$ \sigma^2 = E(x^2) - (E(x))^2 = \frac{1}{n} \sum^{n}_{i=1} {x_i}^2 - \left( \frac{1}{n} \sum^{n}_{i = 1} x_i \right)^2 $$
+
+### Size 50
 ```{r}
-nsample <- sample_n(train,size=200,replace=T)
-mean_est1=mean(nsample$Age,na.rm = T)
-var_est1=sd(nsample$Age,na.rm = T)**2
+# Sampling
+n_size = 50
+nsample <- sample_n(train,size=n_size,replace=T)
+# MME
+mean_est1=sum(nsample$Age) / n_size
+var_est1 = (sum(nsample$Age^2) / n_size) - (mean_est1)^2
 mean_est1
 var_est1
 bias(actual = mean(train$Age,na.rm = T), predicted = mean_est1)
+# MLE
+NLL = function(pars,data){
+  # Extract parameters from the vector
+  mu = pars[1]
+  sigma = pars[2]
+  NLL = -sum(dnorm(x = data , mean = mu, sd = sigma , log = TRUE))
+  # Log of pdf
+  # negative to get max
+}
+mle <- optim(par = c(mu= .2 , sigma = 1.5),fn=NLL,data=nsample$Age,control = list(parscale=c(mu= .2 , sigma = 1.5)))
+mle$par[1]
 
+bias(actual = mean(train$Age,na.rm = T), predicted = mle$par[1])
+```
+
+### Size 200
+```{r}
+# Sampling
+n_size = 200
+nsample <- sample_n(train,size=n_size,replace=T)
+# MME
+mean_est1=sum(nsample$Age) / n_size
+var_est1 = (sum(nsample$Age^2) / n_size) - (mean_est1)^2
+mean_est1
+var_est1
+bias(actual = mean(train$Age,na.rm = T), predicted = mean_est1)
+# MLE
 NLL = function(pars,data){
   # Extract parameters from the vector
   mu = pars[1]
@@ -607,7 +666,7 @@ mean_est1=mean(nsample$Age,na.rm = T)
 sd_est1=sd(nsample$Age,na.rm = T)
 
 # Computing The Error Using the qnorm() Function to Calculate The Normal Distribution 
-error=qnorm(0.975)*(sd_est1/sqrt(n_size))
+error=qt(0.975,df = 9, lower.tail = T)*(sd_est1/sqrt(n_size)) # at lower.tail = T probability is P[X<=x] , otherwise P[X>x]
 
 #Determining The Mean Interval[]
 left <- mean_est1-error
@@ -645,11 +704,11 @@ n_size = 200
 nsample <- sample_n(train,size = n_size,replace = T)
 
 nsample %>%
-  summarise(Age_mean = mean(Age), Age_sd = sd(Age),Age_var = sd(Age)**2)
+  summarise(Age_mean = mean(Age), Age_sd = sd(Age),Age_var = sd(Age)^2)
 
 nsample$Age <- nsample$Age *5
 nsample %>%
-  summarise(Age_mean = mean(Age), Age_sd = sd(Age),Age_var = sd(Age)**2)
+  summarise(Age_mean = mean(Age), Age_sd = sd(Age),Age_var = sd(Age)^2)
 
 ```
 ### Addition
@@ -660,11 +719,11 @@ n_size = 200
 nsample <- sample_n(train,size = n_size,replace = T)
 
 nsample %>%
-  summarise(Age_mean = mean(Age), Age_sd = sd(Age),Age_var = sd(Age)**2)
+  summarise(Age_mean = mean(Age), Age_sd = sd(Age),Age_var = sd(Age)^2)
 
 nsample$Age <- nsample$Age + 5
 nsample %>%
-  summarise(Age_mean = mean(Age), Age_sd = sd(Age),Age_var = sd(Age)**2)
+  summarise(Age_mean = mean(Age), Age_sd = sd(Age),Age_var = sd(Age)^2)
 
 ```
 
