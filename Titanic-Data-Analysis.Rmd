@@ -18,7 +18,7 @@ output:
 always_allow_html: yes
 editor_options: 
   markdown: 
-    wrap: 72
+    wrap: 80
 ---
 
 # Introduction
@@ -296,7 +296,7 @@ distribution, yet it's not a normal distribution itself.
 
 ### Fare
 
-The histogram of the Fare feature fits the chi-square distribution.
+The histogram of the Fare feature fits the $\chi^2$ distribution.
 
 ## Plotting The Data
 
@@ -388,7 +388,19 @@ gSexSurvived <- train %>%
   theme_ipsum_rc()
 print(gSexSurvived)
 ```
+### Survival Density and Age
+```{r}
+gSurvivalAgeDensity <- ggplot(train[(!is.na(train$Survived) & !is.na(train$Age)),],
+            aes(x = Age,
+                fill = Survived)) +
+  geom_density(alpha=0.5,
+               aes(fill=as_factor(Survived))) +
+  labs(title="Survival density and Age") +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 10)) +
+  theme_ipsum()
 
+gSurvivalAgeDensity
+```
 ### Dashboard of the previous graphs
 
 ```{r}
@@ -418,7 +430,7 @@ sample_50 <- sample_n(train,size = 50,replace = T) %>%
   summarise(mean = mean(Age), sd = sd(Age))
 sample_50
 ```
-### Sampling distrubution with a fixed size (50)
+### Sampling distrubution with a fixed size (50) (mean)
 ```{r}
 numOfSamples <- seq(50,1000,50)
 
@@ -447,7 +459,7 @@ gSamplingReps
 While no. of sample size increase the variability of sampling
 distribution decrease and the mean increase.
 
-### Sampling distrubution with a fixed repetitions and different sizes
+### Sampling distribution with a fixed repetitions and different sizes (mean)
 
 ```{r sampling-distrubution-sizes}
 sizes <- seq(20,260,20)
@@ -473,6 +485,86 @@ gSamplingSize
 While no. of sample size increase the variability of sampling
 distribution decrease,and The sample distribution mean will be normally
 distributed as long as the sample size is more than 30.
+
+### sampling distribution of variance with different sizes and fixed repitions.
+
+```{r}
+sizes <- c(2,20,25,30,35,40,45,50)
+smplngDstrbtnSzChngVariance <- tibble()
+for(i in sizes){
+  for(y in 1:1500){
+    nsample <- sample_n(train,size=i,replace=T) %>%
+      select(Age)
+    newRow <- nrow(smplngDstrbtnSzChngVariance) + 1
+    smplngDstrbtnSzChngVariance[newRow,"sizes"] <- i
+    smplngDstrbtnSzChngVariance[newRow,"variance"] <- sd(nsample$Age,na.rm = T)**2
+  }
+}
+gSamplingSizeVariance <- smplngDstrbtnSzChngVariance %>%
+  plot_ly(
+    x = ~variance,
+    frame = ~sizes,
+    type = "histogram"
+  )
+gSamplingSizeVariance
+```
+
+## Male Age - Female Age
+```{r}
+age_male <- train %>%
+  select(Age,Sex) %>%
+  mutate(Sex = as_factor(Sex)) %>%
+  filter(Sex == "male")
+age_female <- train %>%
+  select(Age,Sex) %>%
+  mutate(Sex = as_factor(Sex)) %>%
+  filter(Sex == "female")
+
+sample_age_male_50 <- age_male %>%
+  rep_sample_n(size = 50,reps = 15000,replace = T) %>%
+  summarise(age_male_bar = mean(Age,na.rm = T))
+sample_age_female_50 <- age_female %>%
+  rep_sample_n(size = 50,reps = 15000,replace = T) %>%
+  summarise(age_female_bar = mean(Age,na.rm = T))
+
+samplediff_means <- sample_age_male_50$age_male_bar -  sample_age_female_50$age_female_bar %>%
+  as_tibble()
+
+gsamplediff_means <- samplediff_means %>%
+  ggplot(aes(value, y = ..density..)) +
+  geom_histogram(bins = 25,binwidth = 1,color=inferno(1,alpha=1)) + 
+  geom_density(fill=inferno(1,begin = 0.5,alpha = 0.5),color = inferno(1,begin=0)) +
+  ggtitle("Distribution") +
+  theme_ipsum_rc()
+gsamplediff_means
+```
+## Survived Male - Survived Female
+```{r}
+survived_male <- train %>%
+  select(Survived,Sex) %>%
+  filter(Sex == "male")
+
+survived_female <- train %>%
+  select(Survived,Sex) %>%
+  filter(Sex == "female")
+
+sample_survive_male_50 <- survived_male %>%
+  rep_sample_n(size = 50,reps = 15000,replace = T)
+sample_survive_female_50 <- survived_female %>%
+  rep_sample_n(size = 50,reps = 15000,replace = T)
+samplediff_survived <- sample_survive_male_50$Survived - sample_survive_female_50$Survived %>% 
+  as_tibble()
+
+gsamplediff_survived <- samplediff_survived %>%
+  ggplot(aes(value)) +
+  geom_histogram(bins = 25,binwidth = 1,color=inferno(1,alpha=1)) + 
+  ggtitle("Distribution") +
+  theme_ipsum_rc()
+gsamplediff_survived
+```
+The plot is a bit hard to understand so it needs a bit of explanation. $-1$ represents the female survived, $0$ represents the neither of them survived, and $1$ means that the male survived
+
+After inspecting the plot, it becomes Crystal clear that there was a bias in the rescue process where rescuers preferred to save female more than males.
 
 # kernel distribution
 
@@ -522,9 +614,9 @@ that there might be two major peaks in the data. Specifying a larger
 bandwidth produces a curve nearly identical to the kernel function
 Choosing the optimal ($h$) bandwidth methods :
 
-1.  Silverman's rule of thump that computes an optimal h by assuming
+1. Silverman's rule of thump that computes an optimal h by assuming
     that data is normally distributed
-2.  Improved Sheather Jones (ISJ) an algorithm is more robust with
+2. Improved Sheather Jones (ISJ) an algorithm is more robust with
     multimodality data or a lot of data (one disadvantage is it needs to
     large data )
 
@@ -550,124 +642,20 @@ Manhattan distance - norm-p =2 Euclidean norm - norm-p =inf maximum norm
 standard euclidean distance is good choice because it invariant under
 rotation as large data choice of k and p isn't important so
 
-# Answering our Questions
+## Kolmogorov-Smirnov Test
 
-## Acurrate summary of our data.
+> Non parametric test
 
-Q3) i)
+Kolmogorov-Smirnov Test is used to:
+1. Decide if a sample comes from a population with an expected continuous distribution (mostly normal distribution)
+2. To test for the difference in the shape of two sample distributions
 
-ii)?? iii) Yes, by interval estimation iv)?? Q4) Q5)
+Compare overall shape of distribution, not specifically parameter
 
-```{r}
-gAgeDensity <- train %>%
-  select(Age) %>%
-  ggplot(aes(Age, y = ..density..)) +
-  geom_histogram(bins = 20,binwidth = 1,color=inferno(1,alpha=1)) + 
-  geom_density(fill=inferno(1,begin = 0.5,alpha = 0.5),color = inferno(1,begin=0)) + 
-  annotate(
-    "text",
-    x = 70,
-    y = 0.04,
-    label = paste("Skewness:",skewness(train$Age,na.rm = T)),
-    colour = inferno(1,begin = 0.1),
-    size = 4
-  ) + 
-  theme_ipsum_rc()
+Kolmogorov-Smirnov Test is defined by a hypothesis: 
+$H_0$ : the data follow specific distribution $F(x) = F_T (x)$
+$H_a$ : the data don't follow specific distribution  $F(x) \neq F_T (x)$
 
-gAgeDensity
-```
+KS-test is made between some theoretical cumulative distribution function ($F_T(x)$), and a sample cumulative distribution function ($F_s(x)$) that measured by the statistic D, which is the greatest vertical distance between them.
+$$ D = \underbrace{\text{sup}}_{x} | F_s(x) - F_t (x)|$$
 
-Q6)//?
-
-```{r}
-gFareDensity <- train %>%
-  select(Fare) %>%
-  ggplot(aes(Fare, y = ..density..)) +
-  geom_histogram(bins = 20,binwidth = 1,color=viridis(1,alpha=1)) + 
-  geom_density(fill=inferno(1,begin = 0.5,alpha = 0.5),color = viridis(1,begin=0)) + 
-  scale_y_continuous(limits = c(0,0.05))+
-  theme_ipsum_rc() + 
-  annotate(
-    "text",
-    x = 200,
-    y = 0.05,
-    label = paste("Skewness",skewness(train$Fare)),
-    colour = "black",
-    size = 4
-  )
-
-gFareDensity
-```
-
-Q8) Q)9,10,11
-
-```{r}
-numOfSamples <- c(50,100,1000)
-smplngDstrbtonRpsChng <- tibble()
-for(i in numOfSamples){
-  for(y in 1:i){
-    nsample <- sample_n(train,size=50,replace=T) %>%
-      select(Age)
-    newRow <- nrow(smplngDstrbtonRpsChng) + 1
-    smplngDstrbtonRpsChng[newRow,"reps"] <- i
-    smplngDstrbtonRpsChng[newRow,"x_bar"] <- mean(nsample$Age,na.rm = T)
-  }
-}
-
-gSamplingReps <- smplngDstrbtonRpsChng %>%
-  plot_ly(
-    x = ~x_bar,
-    frame = ~reps,
-    type = "histogram"
-  )
-
-gSamplingReps
-```
-
-Q12)  Q)13,14,15
-
-```{r eval=FALSE, include=FALSE}
-sizes <- seq(20,200,20)
-smplngDstrbtonSzChng <- tibble()
-for(i in sizes){
-  for(y in 1:1500){
-    nsample <- sample_n(train,size=i,replace=T) %>%
-      select(Age)
-    newRow <- nrow(smplngDstrbtonSzChng) + 1
-    smplngDstrbtonSzChng[newRow,"sizes"] <- i
-    smplngDstrbtonSzChng[newRow,"x_bar"] <- mean(nsample$Age,na.rm = T)
-  }
-}
-gSamplingSize <- smplngDstrbtonSzChng %>%
-  plot_ly(
-    x = ~x_bar,
-    frame = ~sizes,
-    type = "histogram"
-  )
-
-gSamplingSize
-```
-
-Q16) Q17,18)
-
-```{r eval=FALSE, include=FALSE}
-sizes <- seq(2,50,2)
-smplngDstrbtonSzChng <- tibble()
-for(i in sizes){
-  for(y in 1:1500){
-    nsample <- sample_n(train,size=i,replace=T) %>%
-      select(Age)
-    newRow <- nrow(smplngDstrbtonSzChng) + 1
-    smplngDstrbtonSzChng[newRow,"sizes"] <- i
-    smplngDstrbtonSzChng[newRow,"variance"] <- sd(nsample$Age,na.rm = T)**2
-  }
-}
-gSamplingSize <- smplngDstrbtonSzChng %>%
-  plot_ly(
-    x = ~variance,
-    frame = ~sizes,
-    type = "histogram"
-  )
-
-gSamplingSize
-```

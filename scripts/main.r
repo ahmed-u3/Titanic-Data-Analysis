@@ -30,7 +30,8 @@ library(plotly)
 
 # Loading Training Data
 train <- read_csv("data/train.csv")
-
+train <- train %>%
+  dplyr::mutate(Sex = as_factor(Sex))
 # Loading Testing Data
 test <- read_csv("data/test.csv")
 
@@ -257,32 +258,143 @@ gSamplingSize <- smplngDstrbtonSzChng %>%
     type = "histogram"
   )
 gSamplingSize
+
+sizes <- seq(20,260,20)
+smplngDstrbtnSzChngVariance <- tibble()
+for(i in sizes){
+  for(y in 1:1500){
+    nsample <- sample_n(train,size=i,replace=T) %>%
+      select(Age)
+    newRow <- nrow(smplngDstrbtnSzChngVariance) + 1
+    smplngDstrbtnSzChngVariance[newRow,"sizes"] <- i
+    smplngDstrbtnSzChngVariance[newRow,"variance"] <- sd(nsample$Age,na.rm = T)**2
+  }
+}
+gSamplingSizeVariance <- smplngDstrbtnSzChngVariance %>%
+  plot_ly(
+    x = ~variance,
+    frame = ~sizes,
+    type = "histogram"
+  )
+gSamplingSizeVariance
 #-------Additional Graphs-----
-a <- ggplot(df[(!is.na(df$Survived) & !is.na(df$Age)),],
+gSurvivalAgeDensity <- ggplot(df[(!is.na(df$Survived) & !is.na(df$Age)),],
             aes(x = Age,
                 fill = Survived)) +
   geom_density(alpha=0.5, aes(fill=as_factor(Survived))) +
   labs(title="Survival density and Age") +
-  scale_x_continuous(breaks = scales::pretty_breaks(n = 10)) + theme_ipsum()
-a
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 10)) +
+  theme_ipsum()
+gSurvivalAgeDensity
 
 
-ggplot(train[!is.na(train$Survived),], aes(x = Survived, fill = Survived),) +
-  geom_bar(stat='count',) +
+ggplot(train[!is.na(train$Survived),], aes(x = as_factor(Survived), fill = as_factor(Survived)),) +
+  geom_bar(stat='count') +
   labs(x = 'How many people died and survived on the Titanic?') +
-  geom_label(stat='count',aes(label=..count..), size=7) +
-  theme_grey(base_size = 18)
+  geom_label(stat='count',aes(label=..count..)) +
+  scale_fill_discrete(name = "", labels = c("Didn't Survive","Survived")) + 
+  theme_ipsum() 
 
-p1 <- ggplot(train, aes(x = Sex, fill = Sex)) +
-  geom_bar(stat='count', position='dodge') + theme_grey() +
+p1 <- ggplot(train, aes(x = as_factor(Sex), fill = as_factor(Sex))) +
+  geom_bar(stat='count', position='dodge') + theme_ipsum() +
   labs(x = 'All data') +
   geom_label(stat='count', aes(label=..count..)) +
   scale_fill_manual("legend", values = c("female" = "pink", "male" = "green"))
 
-p2 <- ggplot(train[!is.na(train$Survived),], aes(x = Sex, fill = Survived)) +
-  geom_bar(stat='count', position='dodge') + theme_grey() +
+p2 <- ggplot(train[!is.na(train$Survived),], aes(x = as_factor(Sex), fill = as_factor(Survived))) +
+  geom_bar(stat='count', position='dodge') + theme_ipsum() +
   labs(x = 'Training data only') +
   geom_label(stat='count', aes(label=..count..))
 
 gridExtra::grid.arrange(p1,p2, nrow=1)
+
+#-----------Q21-22---------------
+
+# Q-21
+age_male <- train %>%
+  select(Age,Sex) %>%
+  mutate(Sex = as_factor(Sex)) %>%
+  filter(Sex == "male")
+age_female <- train %>%
+  select(Age,Sex) %>%
+  mutate(Sex = as_factor(Sex)) %>%
+  filter(Sex == "female")
+
+sample_age_male_50 <- age_male %>%
+  rep_sample_n(size = 50,reps = 15000,replace = T) %>%
+  summarise(age_male_bar = mean(Age,na.rm = T))
+sample_age_female_50 <- age_female %>%
+  rep_sample_n(size = 50,reps = 15000,replace = T) %>%
+  summarise(age_female_bar = mean(Age,na.rm = T))
+
+samplediff_means <- sample_age_male_50$age_male_bar -  sample_age_female_50$age_female_bar %>%
+  as_tibble()
+
+gsamplediff_means <- samplediff_means %>%
+  ggplot(aes(value, y = ..density..)) +
+  geom_histogram(bins = 25,binwidth = 1,color=inferno(1,alpha=1)) + 
+  geom_density(fill=inferno(1,begin = 0.5,alpha = 0.5),color = inferno(1,begin=0)) +
+  ggtitle("Distribution") +
+  theme_ipsum_rc()
+gsamplediff_means
+
+# Q22
+survived_male <- train %>%
+  select(Survived,Sex) %>%
+  filter(Sex == "male")
+
+survived_female <- train %>%
+  select(Survived,Sex) %>%
+  filter(Sex == "female")
+
+sample_survive_male_50 <- survived_male %>%
+  rep_sample_n(size = 50,reps = 15000,replace = T)
+sample_survive_female_50 <- survived_female %>%
+  rep_sample_n(size = 50,reps = 15000,replace = T)
+samplediff_survived <- sample_survive_male_50$Survived - sample_survive_female_50$Survived %>% 
+  as_tibble()
+
+gsamplediff_survived <- samplediff_survived %>%
+  ggplot(aes(value)) +
+  geom_histogram(bins = 25,binwidth = 1,color=inferno(1,alpha=1)) + 
+  ggtitle("Distribution") +
+  theme_ipsum_rc()
+gsamplediff_survived
+# 0 - 1 = - 1 means that female survived
+# 0 - 0 =   0 means that neighter surived
+# 1 - 0 =   1 means that male survived
+#--------Q23,24--------
+# Taking Sample of Size 10 to Calculate The Mean Interval
+n_size = 10
+nsample <- sample_n(train,size= n_size,replace=T)
+
+# Calculate The Mean
+mean_est1=mean(nsample$Age,na.rm = T)
+
+# Calculate The Standard Deviation
+sd_est1=sd(nsample$Age,na.rm = T)
+
+# Computing The Error Using the qnorm() Function to Calculate The Normal Distribution 
+error=qnorm(0.975)*(sd_est1/sqrt(n_size))
+
+#Determining The Mean Interval[]
+mean_est1-error
+mean_est1+error
+
+# Taking Sample of Size 50 to Calculate The Mean Interval
+n_size = 50
+nsample <- sample_n(train,size=n_size,replace=T)
+
+# Calculate The Mean
+mean_est2=mean(nsample$Age,na.rm = T)
+
+# Calculate The Standard Deviation
+sd_est2=sd(nsample$Age,na.rm = T)
+
+# Computing The Error Using the qnorm() Function to Calculate The Normal Distribution 
+error=qnorm(0.975)*(sd_est1/sqrt(n_size))
+
+#Determining The Mean Interval[]
+mean_est2-error
+mean_est2+error
   
