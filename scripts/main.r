@@ -397,4 +397,27 @@ error=qnorm(0.975)*(sd_est1/sqrt(n_size))
 #Determining The Mean Interval[]
 mean_est2-error
 mean_est2+error
+
+#---------Q19,20------------
+nsample <- sample_n(train,size=200,replace=T)
+mean_est1=mean(nsample$Age,na.rm = T)
+var_est1=sd(nsample$Age,na.rm = T)**2
+mean_est1
+var_est1
+bias(actual = mean(train$Age,na.rm = T), predicted = mean_est1)
+
+NLL = function(pars,data){
+  # Extract parameters from the vector
+  mu = pars[1]
+  sigma = pars[2]
+  NLL = -sum(dnorm(x = data , mean = mu, sd = sigma , log = TRUE))
+  # Log of pdf
+  # negative to get max
+}
+mle <- optim(par = c(mu= .2 , sigma = 1.5),fn=NLL,data=nsample$Age,control = list(parscale=c(mu= .2 , sigma = 1.5)))
+mle$par[1]
+
+bias(actual = mean(train$Age,na.rm = T), predicted = mle$par[1])
+
+
   
