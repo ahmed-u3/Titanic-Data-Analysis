@@ -1,23 +1,26 @@
 ---
 title: "Titanic Data Analysis"
-author: 
-  - "Ahmed Ashraf"
-  - "Omar Gamal Abdelaziz"
-  - "Ahmed Yousri"
-  - "Ahmed Dawood"
-  - "Alia Medhat"
+author:
+- Ahmed Ashraf
+- Omar Gamal Abdelaziz
+- Ahmed Yousri
+- Ahmed Dawood
+- Alia Medhat
 output:
-  html_notebook:
+  html_document:
     toc: yes
+    df_print: paged
   pdf_document:
     toc: yes
     number_sections: yes
     includes:
       in_header: preamble.tex
     highlight: pygments
+  html_notebook:
+    toc: yes
 always_allow_html: yes
-editor_options: 
-  markdown: 
+editor_options:
+  markdown:
     wrap: 80
 ---
 
@@ -401,6 +404,7 @@ gSurvivalAgeDensity <- ggplot(train[(!is.na(train$Survived) & !is.na(train$Age))
 
 gSurvivalAgeDensity
 ```
+
 ### Dashboard of the previous graphs
 
 ```{r}
@@ -538,7 +542,9 @@ gsamplediff_means <- samplediff_means %>%
   theme_ipsum_rc()
 gsamplediff_means
 ```
+
 ## Survived Male - Survived Female
+
 ```{r}
 survived_male <- train %>%
   select(Survived,Sex) %>%
@@ -562,9 +568,83 @@ gsamplediff_survived <- samplediff_survived %>%
   theme_ipsum_rc()
 gsamplediff_survived
 ```
+
 The plot is a bit hard to understand so it needs a bit of explanation. $-1$ represents the female survived, $0$ represents the neither of them survived, and $1$ means that the male survived
 
 After inspecting the plot, it becomes Crystal clear that there was a bias in the rescue process where rescuers preferred to save female more than males.
+
+## Confidence Intervals
+```{r}
+n_size = 10
+nsample <- sample_n(train,size= n_size,replace=T)
+
+# Calculate The Mean
+mean_est1=mean(nsample$Age,na.rm = T)
+
+# Calculate The Standard Deviation
+sd_est1=sd(nsample$Age,na.rm = T)
+
+# Computing The Error Using the qnorm() Function to Calculate The Normal Distribution 
+error=qnorm(0.975)*(sd_est1/sqrt(n_size))
+
+#Determining The Mean Interval[]
+left <- mean_est1-error
+right <- mean_est1+error
+
+print(paste0("[",left,",",right,"]"))
+```
+
+```{r}
+n_size = 50
+nsample <- sample_n(train,size=n_size,replace=T)
+
+# Calculate The Mean
+mean_est2=mean(nsample$Age,na.rm = T)
+
+# Calculate The Standard Deviation
+sd_est2=sd(nsample$Age,na.rm = T)
+
+# Computing The Error Using the qnorm() Function to Calculate The Normal Distribution 
+error=qnorm(0.975)*(sd_est1/sqrt(n_size))
+
+#Determining The Mean Interval[]
+left <- mean_est2-error
+right <- mean_est2+error
+
+print(paste0("[",left,",",right,"]"))
+```
+## Multiplication and addition of constant to the sample values
+
+### Multiplication
+
+```{r}
+n_size = 200
+
+nsample <- sample_n(train,size = n_size,replace = T)
+
+nsample %>%
+  summarise(Age_mean = mean(Age), Age_sd = sd(Age),Age_var = sd(Age)**2)
+
+nsample$Age <- nsample$Age *5
+nsample %>%
+  summarise(Age_mean = mean(Age), Age_sd = sd(Age),Age_var = sd(Age)**2)
+
+```
+### Addition
+
+```{r}
+n_size = 200
+
+nsample <- sample_n(train,size = n_size,replace = T)
+
+nsample %>%
+  summarise(Age_mean = mean(Age), Age_sd = sd(Age),Age_var = sd(Age)**2)
+
+nsample$Age <- nsample$Age + 5
+nsample %>%
+  summarise(Age_mean = mean(Age), Age_sd = sd(Age),Age_var = sd(Age)**2)
+
+```
 
 # kernel distribution
 
@@ -595,10 +675,10 @@ $$
 
 ## Kernel Function
 
-1.  Box
-2.  Triangle
-3.  Normal
-4.  Pantechnicon
+1. Box
+2. Triangle
+3. Normal
+4. Pantechnicon
 
 Each density curve uses the same input data, but applies a different
 kernel smoothing function to generate the pdf. The density estimates are
@@ -642,13 +722,15 @@ Manhattan distance - norm-p =2 Euclidean norm - norm-p =inf maximum norm
 standard euclidean distance is good choice because it invariant under
 rotation as large data choice of k and p isn't important so
 
-## Kolmogorov-Smirnov Test
+# Kolmogorov-Smirnov Test
 
 > Non parametric test
 
 Kolmogorov-Smirnov Test is used to:
 1. Decide if a sample comes from a population with an expected continuous distribution (mostly normal distribution)
 2. To test for the difference in the shape of two sample distributions
+
+![](img/ks-1.png)
 
 Compare overall shape of distribution, not specifically parameter
 
@@ -658,4 +740,15 @@ $H_a$ : the data don't follow specific distribution  $F(x) \neq F_T (x)$
 
 KS-test is made between some theoretical cumulative distribution function ($F_T(x)$), and a sample cumulative distribution function ($F_s(x)$) that measured by the statistic D, which is the greatest vertical distance between them.
 $$ D = \underbrace{\text{sup}}_{x} | F_s(x) - F_t (x)|$$
+![](img/ks-2.png)
 
+1. Determine $x$ values
+2. Detemrine frequency of each observation
+3. Calculate cumulative frequency
+4. Calculate $F_s(x) \rightarrow \frac{\text{cumulative frequence}}{N}$ when $n > 30$ ($z$-scores), when $n<30$ ($t$-scores)
+5. calculate $F_t(x)$
+6. Calculate $D \rightarrow F_s(x) - F_T(x)$
+7. Choose maximum $D$
+8. Calculate $P$-value
+9. Determine Kolmogorov's quartile
+10. Compare $p$-value with Kolmogorove's quartile
