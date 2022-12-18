@@ -7,22 +7,25 @@ author:
 - Ahmed Dawood
 - Alia Medhat
 output:
-  html_document:
+  html_notebook:
     toc: yes
-    df_print: paged
-  pdf_document:
+  hrbrthemes::ipsum_pdf:
     toc: yes
     number_sections: yes
     includes:
       in_header: preamble.tex
     highlight: pygments
-  html_notebook:
+  html_document:
     toc: yes
+    df_print: paged
 always_allow_html: yes
 editor_options:
   markdown:
     wrap: 80
 ---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,  dev = "cairo_pdf")
+```
 
 # Introduction
 
@@ -145,7 +148,7 @@ missing_values %>%
   coord_flip() + # to flip the graph
   xlab("Features") +
   ylab("Percentage of missing values")+
-  scale_y_continuous(labels=scales::percent) +
+  scale_y_continuous(labels=scales::percent) + 
   theme_ipsum()
 ```
 
@@ -309,6 +312,7 @@ missing_values %>%
   scale_y_continuous(labels=scales::percent) +
   theme_ipsum()
 ```
+
 ### Correlation matrix after imputation
 
 ```{r Correlation Matrix 2, fig.align='center'}
@@ -426,16 +430,6 @@ gSurvivalAgeDensity <- ggplot(train[(!is.na(train$Survived) & !is.na(train$Age))
 gSurvivalAgeDensity
 ```
 
-### Dashboard of the previous graphs
-
-```{r}
-gridExtra::grid.arrange(gPclassSurvived,
-                        gSibSpSurvived,
-                        gSexSurvived,
-                        gParchSurvived,
-                        gSurvivalAgeDensity,
-                        nrow=3)
-```
 
 ```{r}
 train %>%
@@ -457,7 +451,36 @@ sample_50 <- sample_n(train,size = 50,replace = T) %>%
 sample_50
 ```
 ### Sampling distrubution with a fixed size (50) (mean)
-```{r}
+
+#### 50 Samples
+```{r 50 Samples - mean}
+sample_means50 <- rep_sample_n(train,size = 50, reps = 50,replace =T) %>%
+  summarise(mean = mean(Age))
+sample_means50 %>% ggplot(aes(x = mean)) +
+  geom_histogram(bins=20, colour = inferno(1),fill=inferno(1,begin=0.9))+
+  theme_ipsum()
+```
+
+#### 100 Samples
+```{r 100 Samples - mean}
+sample_means100 <- rep_sample_n(train,size = 50, reps = 100,replace =T) %>%
+  summarise(mean = mean(Age))
+sample_means100 %>% ggplot(aes(x = mean)) +
+  geom_histogram(bins=20, colour = inferno(1),fill=inferno(1,begin=0.9))+
+  theme_ipsum()
+```
+
+#### 1000 Samples
+
+```{r 1000 Samples - mean}
+sample_means1000 <- rep_sample_n(train,size = 50, reps = 1000,replace =T) %>%
+  summarise(mean = mean(Age))
+sample_means1000 %>% ggplot(aes(x = mean)) +
+  geom_histogram(bins=20, colour = inferno(1),fill=inferno(1,begin=0.9))+
+  theme_ipsum()
+```
+
+```{r SampleSizeAnimation}
 numOfSamples <- seq(50,1000,50)
 
 smplngDstrbtnRpsChng <- tibble()
@@ -488,6 +511,33 @@ distribution decrease and the mean increase.
 
 ### Sampling distribution with a fixed repetitions and different sizes (mean)
 
+#### Size 20
+```{r}
+sample_mean_s20 <- rep_sample_n(train,size = 20, reps = 1500,replace =T) %>%
+  summarise(mean = mean(Age))
+sample_mean_s20 %>% ggplot(aes(x = mean)) +
+  geom_histogram(bins=20, colour = inferno(1),fill=inferno(1,begin=0.9))+
+  theme_ipsum()
+```
+
+#### Size 100
+```{r}
+sample_mean_s100 <- rep_sample_n(train,size = 100, reps = 1500,replace =T) %>%
+  summarise(mean = mean(Age))
+sample_mean_s100 %>% ggplot(aes(x = mean)) +
+  geom_histogram(bins=20, colour = inferno(1),fill=inferno(1,begin=0.9))+
+  theme_ipsum()
+```
+
+#### Size 200
+```{r}
+sample_mean_s200 <- rep_sample_n(train,size = 200, reps = 1500,replace =T) %>%
+  summarise(mean = mean(Age))
+sample_mean_s200 %>% ggplot(aes(x = mean)) +
+  geom_histogram(bins=20, colour = inferno(1),fill=inferno(1,begin=0.9))+
+  theme_ipsum()
+```
+
 ```{r sampling-distrubution-sizes}
 sizes <- seq(20,260,20)
 smplngDstrbtnSzChng <- tibble()
@@ -515,6 +565,23 @@ distributed as long as the sample size is more than 30.
 
 ### sampling distribution of variance with different sizes and fixed repitions.
 
+#### Size 2 and 1500 reptitions
+```{r}
+sample_U1500 <- rep_sample_n(train,size = 2, reps = 1500,replace =T) %>%
+  summarise(varience = var(Age))
+sample_U1500 %>% ggplot(aes(x = varience)) +
+  geom_histogram(bins=20, colour = inferno(1),fill=inferno(1,begin=0.9))+
+  theme_ipsum()
+```
+#### Size 50 and 1500 reptitions
+```{r}
+sample_U1500 <- rep_sample_n(train,size = 50, reps = 1500,replace =T) %>%
+  summarise(varience = var(Age))
+sample_U1500 %>% ggplot(aes(x = varience)) +
+  geom_histogram(bins=20, colour = inferno(1),fill=inferno(1,begin=0.9))+
+  theme_ipsum()
+```
+
 ```{r}
 sizes <- c(2,20,25,30,35,40,45,50)
 smplngDstrbtnSzChngVariance <- tibble()
@@ -524,7 +591,7 @@ for(i in sizes){
       select(Age)
     newRow <- nrow(smplngDstrbtnSzChngVariance) + 1
     smplngDstrbtnSzChngVariance[newRow,"sizes"] <- i
-    smplngDstrbtnSzChngVariance[newRow,"variance"] <- sd(nsample$Age,na.rm = T)**2
+    smplngDstrbtnSzChngVariance[newRow,"variance"] <- var(nsample$Age,na.rm = T)
   }
 }
 gSamplingSizeVariance <- smplngDstrbtnSzChngVariance %>%
@@ -594,7 +661,9 @@ mle$par[1]
 
 bias(actual = mean(train$Age,na.rm = T), predicted = mle$par[1])
 ```
+
 ## Male Age - Female Age
+
 ```{r}
 age_male <- train %>%
   select(Age,Sex) %>%
@@ -644,7 +713,7 @@ samplediff_survived <- sample_survive_male_50$Survived - sample_survive_female_5
 
 gsamplediff_survived <- samplediff_survived %>%
   ggplot(aes(value)) +
-  geom_histogram(bins = 25,binwidth = 1,color=inferno(1,alpha=1)) + 
+  geom_histogram(bins = 25,binwidth = 1,color=inferno(1,alpha=1),fill = inferno(3)) + 
   ggtitle("Distribution") +
   theme_ipsum_rc()
 gsamplediff_survived
@@ -655,6 +724,7 @@ The plot is a bit hard to understand so it needs a bit of explanation. $-1$ repr
 After inspecting the plot, it becomes Crystal clear that there was a bias in the rescue process where rescuers preferred to save female more than males.
 
 ## Confidence Intervals
+
 ```{r}
 n_size = 10
 nsample <- sample_n(train,size= n_size,replace=T)
@@ -694,6 +764,7 @@ right <- mean_est2+error
 
 print(paste0("[",left,",",right,"]"))
 ```
+
 ## Multiplication and addition of constant to the sample values
 
 ### Multiplication
@@ -711,6 +782,7 @@ nsample %>%
   summarise(Age_mean = mean(Age), Age_sd = sd(Age),Age_var = sd(Age)^2)
 
 ```
+
 ### Addition
 
 ```{r}
